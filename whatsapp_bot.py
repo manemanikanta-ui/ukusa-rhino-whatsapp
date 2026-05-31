@@ -149,12 +149,15 @@ def _handle_admin_command(text: str) -> str | None:
     return None
 
 
-@app.route('/webhook', methods=['GET'])
+@app.route('/webhook', methods=['GET'], strict_slashes=False)
+@app.route('/webhook/', methods=['GET'], strict_slashes=False)
 def verify():
     challenge = request.args.get('hub.challenge', '')
-    token = request.args.get('hub.verify_token', '')
-    if token == VERIFY_TOKEN:
-        return challenge
+    token = (request.args.get('hub.verify_token', '') or '').strip()
+    expected_token = (os.getenv('VERIFY_TOKEN', VERIFY_TOKEN) or '').strip()
+    if token == expected_token:
+        return challenge, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    logger.warning('Webhook verify failed: token mismatch')
     return 'Forbidden', 403
 
 
@@ -203,6 +206,11 @@ def webhook():
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'service': 'rex'}), 200
+
+
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({'status': 'ok', 'service': 'rex', 'endpoints': ['/health', '/webhook']}), 200
 
 
 if __name__ == '__main__':
