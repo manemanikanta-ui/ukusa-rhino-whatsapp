@@ -22,3 +22,16 @@ conversation_*.json
 
 # Ngrok
 start_ngrok.py
+
+Set-Content -Encoding UTF8 .gitignore @'
+.env
+__pycache__/
+*.pyc
+data/
+logs/
+*.log
+*.docx
+*.pdf
+.venv/
+venv/
+'@
