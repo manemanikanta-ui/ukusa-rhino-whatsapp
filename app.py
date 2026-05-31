@@ -1,1 +1,1 @@
-﻿from whatsapp_bot import app
+from whatsapp_bot import app
