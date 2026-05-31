@@ -1,5 +1,4 @@
-flask
-requests
-python-dotenv
-openai
-anthropic
+﻿Flask>=3.0.0
+requests>=2.32.0
+python-dotenv>=1.0.1
+anthropic>=0.40.0

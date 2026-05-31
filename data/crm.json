@@ -1,0 +1,197 @@
+{
+  "leads": [
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:13:04.696675+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hello",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:13:21.869568+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:18:32.820234+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:21:03.158356+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "menu recommendation",
+      "message": "Menu please",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:21:28.551269+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "menu recommendation",
+      "message": "Coffee and something to eat",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:21:59.598595+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "menu recommendation",
+      "message": "Roasted Hazelnut coffee and a chicken pizza please",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:22:46.641894+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "I need ketchup along with the pizza please",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:23:24.479266+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Also some chips would be perfect!",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:23:49.411530+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "That sounds perfect thanks",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:24:17.818388+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "That’s all thanks!!",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:24:40.948572+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Can I please know where you located at in hyderabad ?",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:32:32.015989+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hitec city",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:32:57.552082+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Directions please",
+      "source": "whatsapp",
+      "timestamp": "2026-05-29T18:33:18.704285+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:08:49.686217+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:11:01.292086+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:22:53.926736+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:44:34.475456+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:49:33.772094+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:50:11.779745+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:53:07.821496+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T12:53:58.580916+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T13:54:58.053723+00:00"
+    },
+    {
+      "phone": "61404470444",
+      "name": "Mani",
+      "intent": "general customer",
+      "message": "Hi",
+      "source": "whatsapp",
+      "timestamp": "2026-05-31T14:43:08.809705+00:00"
+    }
+  ],
+  "bookings": []
+}
