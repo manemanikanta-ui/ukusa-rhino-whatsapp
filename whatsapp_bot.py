@@ -35,8 +35,6 @@ app = Flask(__name__)
 
 WHATSAPP_TOKEN = os.getenv('WHATSAPP_TOKEN', '')
 PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_ID', '')
-print("WHATSAPP_TOKEN loaded:", bool(WHATSAPP_TOKEN))
-print("PHONE_NUMBER_ID loaded:", PHONE_NUMBER_ID)
 VERIFY_TOKEN = os.getenv('VERIFY_TOKEN', 'ukusa_rhino_rex')
 ADMIN_PHONE_NUMBERS = {
     normalize_phone(number)
@@ -204,7 +202,7 @@ def webhook():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok'}), 200
+    return jsonify({'status': 'ok', 'service': 'rex'}), 200
 
 
 if __name__ == '__main__':

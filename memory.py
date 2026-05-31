@@ -1,4 +1,8 @@
-﻿from __future__ import annotations
+﻿# NOTE: Railway ephemeral filesystem.
+# memory.json resets on redeploy.
+# TODO: migrate to Railway PostgreSQL
+# for persistent memory in production.
+from __future__ import annotations
 
 import json
 import threading
@@ -215,4 +219,5 @@ def add_favorite(phone: str, item: str, bucket: str) -> None:
 
 
 _load()
+
 

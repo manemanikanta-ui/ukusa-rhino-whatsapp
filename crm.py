@@ -1,4 +1,8 @@
-﻿from __future__ import annotations
+﻿# NOTE: Railway ephemeral filesystem.
+# memory.json resets on redeploy.
+# TODO: migrate to Railway PostgreSQL
+# for persistent memory in production.
+from __future__ import annotations
 
 import json
 import threading
@@ -150,4 +154,5 @@ def get_stats() -> dict[str, Any]:
 
 
 _load()
+
 
