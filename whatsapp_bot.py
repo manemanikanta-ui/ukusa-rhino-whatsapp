@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 
 from agent import chat, format_event_overview, format_menu_overview, normalize_phone
-from crm import get_bookings, get_leads, get_stats
+from crm import get_bookings, get_leads, get_orders, get_stats
 from memory import set_meta
 
 load_dotenv()
@@ -74,6 +74,32 @@ def send_message(to: str, text: str) -> bool:
         return False
 
 
+def send_interactive_message(to: str, interactive: dict) -> bool:
+    if not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
+        logger.error('WhatsApp credentials are missing; cannot send interactive message to %s', to)
+        return False
+
+    url = f'https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages'
+    headers = {
+        'Authorization': f'Bearer {WHATSAPP_TOKEN}',
+        'Content-Type': 'application/json',
+    }
+    payload = {
+        'messaging_product': 'whatsapp',
+        'to': to,
+        'type': 'interactive',
+        'interactive': interactive,
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=20)
+        response.raise_for_status()
+        logger.info('Outgoing interactive WhatsApp message sent to %s', to)
+        return True
+    except requests.RequestException as exc:
+        logger.exception('Failed to send interactive message to %s: %s', to, exc)
+        return False
+
+
 def _extract_value_and_message(data: dict[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     for entry in data.get('entry', []):
         for change in entry.get('changes', []):
@@ -91,9 +117,13 @@ def _extract_text(message: dict[str, Any]) -> str:
     if msg_type == 'interactive':
         interactive = message.get('interactive', {})
         button = interactive.get('button_reply', {})
+        if button.get('id'):
+            return str(button.get('id')).strip()
         if button.get('title'):
             return str(button.get('title')).strip()
         list_reply = interactive.get('list_reply', {})
+        if list_reply.get('id'):
+            return str(list_reply.get('id')).strip()
         if list_reply.get('title'):
             return str(list_reply.get('title')).strip()
     if msg_type == 'button':
@@ -137,6 +167,17 @@ def _handle_admin_command(text: str) -> str | None:
         return _format_admin_list('Recent leads', get_leads(10))
     if command == 'admin bookings':
         return _format_admin_list('Recent bookings', get_bookings(10))
+    if command == 'admin orders':
+        orders = get_orders(10)
+        if not orders:
+            return 'No orders yet.'
+        lines = ['🍽️ Recent Orders\n']
+        for order in orders:
+            items_str = ', '.join(order.get('items', []))
+            lines.append(
+                f"#{order.get('order_number')} · Table {order.get('table')} · {items_str}"
+            )
+        return '\n'.join(lines)
     if command == 'admin stats':
         stats = get_stats()
         return (
@@ -194,7 +235,8 @@ def webhook():
 
     try:
         reply = chat(phone, user_text)
-        send_message(phone, reply)
+        if reply:
+            send_message(phone, reply)
     except Exception as exc:
         logger.exception('Failed to process webhook message from %s: %s', phone, exc)
         fallback = 'Rex hit a quick pit stop. Please send that again in a moment.'

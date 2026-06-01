@@ -3,6 +3,8 @@
 import logging
 import os
 import re
+import random
+from datetime import datetime, timezone
 from typing import Any
 
 import anthropic
@@ -11,14 +13,19 @@ from dotenv import load_dotenv
 from business_data import BUSINESS
 from crm import get_recent_bookings, get_stats, record_booking, record_lead
 from memory import (
+    add_to_basket,
     add_booking,
     add_favorite,
     add_message,
+    clear_basket,
+    get_basket,
+    get_table,
     get_history,
     get_meta,
     increment_visits,
     remember_preferences,
     set_meta,
+    set_table,
     update_meta,
 )
 from menu_data import UKUSA_MENU
@@ -60,6 +67,13 @@ INTERCEPT_EVENTS = {
 MENU_CATEGORIES = list(UKUSA_MENU.values())
 ALL_MENU_ITEMS = [item for category in MENU_CATEGORIES for item in category.get('items', [])]
 ALL_MENU_ITEMS_LOWER = [(item, item.lower()) for item in ALL_MENU_ITEMS]
+MENU_ITEM_LOOKUP = {re.sub(r'[^a-z0-9]+', '', item.lower()): item for item in ALL_MENU_ITEMS}
+
+CATEGORY_TO_KEYS = {
+    'cat_food': ['cold_start', 'full_throttle', 'pit_lane', 'victory_lap'],
+    'cat_drinks': ['ignition'],
+    'cat_desserts': ['victory_lap'],
+}
 
 RECOMMENDATION_RULES: dict[str, list[str]] = {
     'coffee': ['Roasted Hazelnut Coffee', 'Peach Cold Brew', 'Flat White'],
@@ -415,6 +429,141 @@ def _fmt_events() -> str:
     )
 
 
+def _slugify(text: str) -> str:
+    return re.sub(r'[^a-z0-9]+', '', str(text or '').lower())
+
+
+def _resolve_menu_item(identifier: str) -> str:
+    cleaned = _slugify(identifier.replace('item_', ''))
+    if cleaned in MENU_ITEM_LOOKUP:
+        return MENU_ITEM_LOOKUP[cleaned]
+    for item in ALL_MENU_ITEMS:
+        if cleaned and cleaned in _slugify(item):
+            return item
+    return identifier.replace('_', ' ').strip()
+
+
+def _send_main_menu_buttons(phone: str, table: str | None = None) -> None:
+    from whatsapp_bot import send_interactive_message
+
+    greeting = 'Welcome to Ukusa Rhino! 🏁'
+    if table:
+        greeting = f'Welcome to Ukusa Rhino! 🏁\nTable *{table}* locked in.'
+    interactive = {
+        'type': 'button',
+        'body': {
+            'text': greeting + '\n\nWhat can Rex get you?'
+        },
+        'action': {
+            'buttons': [
+                {'type': 'reply', 'reply': {'id': 'cat_food', 'title': '🍽️ Food Menu'}},
+                {'type': 'reply', 'reply': {'id': 'cat_drinks', 'title': '☕ Drinks'}},
+                {'type': 'reply', 'reply': {'id': 'view_order', 'title': '📋 My Order'}},
+            ]
+        }
+    }
+    send_interactive_message(phone, interactive)
+
+
+def _send_category_list(phone: str, category: str) -> None:
+    from whatsapp_bot import send_interactive_message
+
+    keys = CATEGORY_TO_KEYS.get(category, ['full_throttle'])
+    rows: list[dict[str, str]] = []
+    for key in keys:
+        section_data = UKUSA_MENU.get(key, {})
+        for item in section_data.get('items', []):
+            item_id = f"item_{_slugify(item)[:40]}"
+            rows.append({
+                'id': item_id,
+                'title': str(item)[:24],
+                'description': 'Tap to add to order',
+            })
+            if len(rows) >= 10:
+                break
+        if len(rows) >= 10:
+            break
+
+    if not rows:
+        return
+
+    interactive = {
+        'type': 'list',
+        'body': {
+            'text': 'Select an item to add to your order 🏁'
+        },
+        'action': {
+            'button': 'View Items',
+            'sections': [{
+                'title': 'Menu Items',
+                'rows': rows[:10],
+            }]
+        }
+    }
+    send_interactive_message(phone, interactive)
+
+
+def _send_order_actions(phone: str) -> None:
+    from whatsapp_bot import send_interactive_message
+
+    basket = get_basket(phone)
+    count = len(basket)
+    body = 'Item added! 🏁\n\n*Your order so far:*\n'
+    for item in basket:
+        body += f'• {item}\n'
+    body += f'\n{count} item(s) in your order.'
+
+    interactive = {
+        'type': 'button',
+        'body': {'text': body},
+        'action': {
+            'buttons': [
+                {'type': 'reply', 'reply': {'id': 'cat_food', 'title': '➕ Add More Food'}},
+                {'type': 'reply', 'reply': {'id': 'cat_drinks', 'title': '➕ Add Drinks'}},
+                {'type': 'reply', 'reply': {'id': 'submit_order', 'title': '✅ Submit Order'}},
+            ]
+        }
+    }
+    send_interactive_message(phone, interactive)
+
+
+def _submit_order(phone: str) -> str:
+    from crm import save_order
+
+    basket = get_basket(phone)
+    table = get_table(phone) or 'Unknown'
+    profile = get_meta(phone)
+    name = profile.get('name') or 'Guest'
+
+    if not basket:
+        return 'Your order is empty! Tap *Food Menu* to start adding items 🏁'
+
+    order_num = f"UK{random.randint(100, 999)}"
+    save_order({
+        'order_number': order_num,
+        'phone': phone,
+        'name': name,
+        'table': table,
+        'items': basket,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+    })
+    clear_basket(phone)
+
+    items_text = '\n'.join(f'• {item}' for item in basket)
+    return (
+        f'✅ *Order Confirmed!*\n\n'
+        f'Order: *#{order_num}*\n'
+        f'Table: *{table}*\n\n'
+        f'*Your order:*\n{items_text}\n\n'
+        f'⏱️ Est. time: 15-20 mins\n\n'
+        f'Need anything?\n'
+        f'💧 Type *water* for water\n'
+        f'🙋 Type *waiter* to call someone\n'
+        f'🚻 Type *restroom* for directions\n\n'
+        f'Thank you! Race on 🏁'
+    )
+
+
 def _call_claude(messages: list[dict]) -> str:
     response = client.messages.create(
         model=MODEL,
@@ -491,6 +640,56 @@ def chat(phone: str, user_message: str) -> str:
     _update_preferences_from_message(phone, user_message, profile)
     booking_state = _booking_state(phone, user_message, profile)
 
+    table_match = re.search(r'table\s*#?\s*(\w+)', lower, re.IGNORECASE)
+    if table_match:
+        table_num = table_match.group(1)
+        set_table(phone, table_num)
+        _send_main_menu_buttons(phone, table_num)
+        return ''
+
+    if lower in {'cat_food', 'cat_drinks', 'cat_desserts', '🍽️ food menu', '☕ drinks'}:
+        cat = 'cat_food' if 'food' in lower else 'cat_drinks'
+        if 'dessert' in lower:
+            cat = 'cat_desserts'
+        _send_category_list(phone, cat)
+        return ''
+
+    if lower == 'view_order':
+        basket = get_basket(phone)
+        if not basket:
+            reply = 'Your order is empty! Tap *Food Menu* to add items 🏁'
+        else:
+            items = '\n'.join(f'• {item}' for item in basket)
+            reply = f'📋 *Your current order:*\n\n{items}'
+        _persist_reply(phone, user_message, reply, 'order view', profile.get('name'))
+        return reply
+
+    if lower == 'submit_order':
+        reply = _submit_order(phone)
+        _persist_reply(phone, user_message, reply, 'order submission', profile.get('name'))
+        return reply
+
+    if lower.startswith('item_'):
+        item_name = _resolve_menu_item(lower)
+        add_to_basket(phone, item_name)
+        _send_order_actions(phone)
+        return ''
+
+    if lower == 'water':
+        reply = '💧 A waiter will bring water to your table shortly!'
+        _persist_reply(phone, user_message, reply, 'service request', profile.get('name'))
+        return reply
+
+    if lower == 'waiter':
+        reply = '🙋 Calling a waiter to Table ' + (get_table(phone) or 'your table') + ' now!'
+        _persist_reply(phone, user_message, reply, 'service request', profile.get('name'))
+        return reply
+
+    if lower == 'restroom':
+        reply = '🚻 Restrooms are at the back of the cafe, past the bar on your right 🏁'
+        _persist_reply(phone, user_message, reply, 'service request', profile.get('name'))
+        return reply
+
     if any(kw in lower for kw in INTERCEPT_LOCATION):
         if any(x in lower for x in {'jubilee', 'jh', 'road no'}):
             reply = _fmt_location_single('jubilee_hills')
@@ -507,9 +706,8 @@ def chat(phone: str, user_message: str) -> str:
         return reply
 
     if lower in {'menu', 'show menu', 'full menu', 'send menu', 'food menu'}:
-        reply = _fmt_menu_overview()
-        _persist_reply(phone, user_message, reply, 'menu request', profile.get('name'))
-        return reply
+        _send_main_menu_buttons(phone)
+        return ''
 
     if any(kw in lower for kw in INTERCEPT_CONTACT):
         reply = _fmt_contact()

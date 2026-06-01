@@ -21,6 +21,7 @@ _LOCK = threading.RLock()
 _db: dict[str, Any] = {
     'leads': [],
     'bookings': [],
+    'orders': [],
 }
 
 
@@ -47,6 +48,7 @@ def _load() -> None:
     if isinstance(payload, dict):
         _db['leads'] = payload.get('leads', []) if isinstance(payload.get('leads', []), list) else []
         _db['bookings'] = payload.get('bookings', []) if isinstance(payload.get('bookings', []), list) else []
+        _db['orders'] = payload.get('orders', []) if isinstance(payload.get('orders', []), list) else []
 
 
 def _load_memory_store() -> dict[str, Any]:
@@ -108,6 +110,27 @@ def record_booking(
         _db['bookings'].append(booking)
         _save()
     return booking
+
+
+def save_order(order: dict[str, Any]) -> None:
+    with _LOCK:
+        orders = _db.setdefault('orders', [])
+        if not isinstance(orders, list):
+            orders = []
+        payload = dict(order)
+        payload['created_at'] = _iso_now()
+        orders.append(payload)
+        _db['orders'] = orders
+        _save()
+
+
+def get_orders(limit: int = 20) -> list[dict[str, Any]]:
+    with _LOCK:
+        orders = _db.get('orders', [])
+        if not isinstance(orders, list):
+            return []
+        recent = list(reversed(orders))
+        return recent[:limit]
 
 
 def get_leads(limit: int | None = 10) -> list[dict[str, Any]]:

@@ -218,6 +218,37 @@ def add_favorite(phone: str, item: str, bucket: str) -> None:
         _save()
 
 
+def add_to_basket(phone: str, item: str) -> list[str]:
+    with _LOCK:
+        record = _ensure(phone)
+        basket = record.get('basket', [])
+        if not isinstance(basket, list):
+            basket = []
+        basket.append(item)
+        record['basket'] = basket
+        record['last_active'] = _iso_now()
+        _save()
+        return basket
+
+
+def get_basket(phone: str) -> list[str]:
+    with _LOCK:
+        basket = _ensure(phone).get('basket', [])
+        return list(basket) if isinstance(basket, list) else []
+
+
+def clear_basket(phone: str) -> None:
+    set_meta(phone, 'basket', [])
+
+
+def set_table(phone: str, table_number: str) -> None:
+    set_meta(phone, 'table_number', str(table_number or '').strip())
+
+
+def get_table(phone: str) -> str:
+    return str(get_meta(phone).get('table_number', '') or '')
+
+
 _load()
 
 
